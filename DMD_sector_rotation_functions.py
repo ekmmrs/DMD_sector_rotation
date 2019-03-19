@@ -87,12 +87,16 @@ def set_strategy(vals, r, lookback):
     # A bad prediction is where all predictions were nan (then changed to 0) 
     badp = (np.sum(signals,axis=1) == 0)
     
-    # Codify values to strategy
-    # 1 = Long, 0 = Short
+    # Initilize initial training window to be going long for both benchmark and DMD strategy
+    for i in range(0,lookback+1):
+        for j in range(0,signals.shape[1]):
+            bench[i,j] = 1
+            signals[i,j] = 1
+    
     for i in range(lookback+1, signals.shape[0]):
         bench[i,:] = 1                      # benchmark is going long
         row = signals[i,:]                  # select row of predicted returns from portfolio
-        if (badp[i]):                       # if the prediction is bad
+        if (badp[i]):                       # if the prediction is deemed bad
             signals[i,:] = signals[i-1,:]   # carry over the same prediction from the last state
         else:
             median = np.median(row)         # identify median predicted returns for portfolio
@@ -102,11 +106,11 @@ def set_strategy(vals, r, lookback):
                 else:                       # go short on security if predicted 
                     row[j] = -1             # returns is less than median
             signals[i,:] = row              # codify strategy into signals
-    
-    # Print out the number of bad predictions that are made
+
+    # print out the number of bad predictions that are made
     print('Bad Predictions: ', sum(badp))
     
-    # Return codified matrices
+    # return codified matrices
     return signals, bench
 
 ## Gets returns data of portfolio ##

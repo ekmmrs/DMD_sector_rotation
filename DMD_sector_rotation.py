@@ -19,7 +19,7 @@ import DMD_sector_rotation_functions as fn
 # Inputs for ETF Data
 # Go to https://www.alphavantage.co/support/#api-key
 # to claim your free API key
-key = '94Q8IKY6D04WOYKZ' #'YOUR_API_KEY' # AlphaVantage API key
+key = 'YOUR_API_KEY' # AlphaVantage API key
 ETFs = np.array(['XLY','XLP','XLE','XLF','XLV','XLI','XLB','XLK','XLU']) # all ETFs used
 time_ago = 20 * 12 # 20 years ago of monthly returns data
 
@@ -44,7 +44,7 @@ bench_sharpe = fn.get_sharp(bench_rets)
 print(bench_sharpe)
 
 # Make plot comparing Benchmark and Strategy
-params = {'legend.fontsize': 20,
+params = {'legend.fontsize': 30,
           'legend.handlelength': 2}
 plt.rcParams.update(params)
 
