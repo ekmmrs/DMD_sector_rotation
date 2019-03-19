@@ -49,7 +49,7 @@ def get_security_returns(API_key, securities, time_ago):
         # Concatenate queried security to returns DF
         returns_data = pd.concat([returns_data,data], axis=1, sort=False)
         
-    # Take (time_ago) years of data and sort so that first row is the latest date of securities
+    # Take (time_ago) months of data and sort so that first row is the latest date of securities
     returns_data = returns_data.iloc[:(time_ago)].iloc[::-1]
     # Return dataframe of return values
     return returns_data
@@ -83,24 +83,30 @@ def set_strategy(vals, r, lookback):
     # Set any predictions that are nan to zero
     signals[np.isnan(signals)] = 0
     
-    # Initilize initial training window to be going long for both benchmark and DMD strategy
-    for i in range(0,lookback+1):
-        for j in range(0,signals.shape[1]):
-            bench[i,j] = 1
-            signals[i,j] = 1
-                
-    for i in range(lookback+1, signals.shape[0]):
-        bench[i,:] = 1              # benchmark is going long
-        row = signals[i,:]          # select row of predicted returns from portfolio
-        median = np.median(row)     # identify median predicted returns for portfolio
-        for j in range(0, len(row)):
-            if (row[j] >= median):  # go long on security if predicted 
-                row[j] = 1          # returns is greater than median
-            else:                   # go short on security if predicted 
-                row[j] = -1         # returns is less than median
-        signals[i,:] = row          # codify strategy into signals
+    # np array of whether predictions are bad or not
+    # A bad prediction is where all predictions were nan (then changed to 0) 
+    badp = (np.sum(signals,axis=1) == 0)
     
-    # return codified matrices
+    # Codify values to strategy
+    # 1 = Long, 0 = Short
+    for i in range(lookback+1, signals.shape[0]):
+        bench[i,:] = 1                      # benchmark is going long
+        row = signals[i,:]                  # select row of predicted returns from portfolio
+        if (badp[i]):                       # if the prediction is bad
+            signals[i,:] = signals[i-1,:]   # carry over the same prediction from the last state
+        else:
+            median = np.median(row)         # identify median predicted returns for portfolio
+            for j in range(0, len(row)):
+                if (row[j] >= median):      # go long on security if predicted 
+                    row[j] = 1              # returns is greater than median
+                else:                       # go short on security if predicted 
+                    row[j] = -1             # returns is less than median
+            signals[i,:] = row              # codify strategy into signals
+    
+    # Print out the number of bad predictions that are made
+    print('Bad Predictions: ', sum(badp))
+    
+    # Return codified matrices
     return signals, bench
 
 ## Gets returns data of portfolio ##
